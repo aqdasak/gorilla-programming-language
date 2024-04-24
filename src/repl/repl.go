@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"monkey/lexer"
+	"monkey/parser"
 	"monkey/token"
 )
 
@@ -23,5 +24,8 @@ func Start(in io.Reader, out io.Writer) {
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
 			fmt.Printf("%+v\n", tok)
 		}
+		p := parser.New(lexer.New((line)))
+		program := p.ParseProgram()
+		fmt.Printf("\nAST: %+v\n", program.String())
 	}
 }
