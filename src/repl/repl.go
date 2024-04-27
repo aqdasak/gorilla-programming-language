@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"monkey/evaluator"
 	"monkey/lexer"
+	"monkey/object"
 	"monkey/parser"
 )
 
@@ -12,6 +14,8 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
+
 	// for {
 	// 	fmt.Printf(PROMPT)
 	// 	scanned := scanner.Scan()
@@ -34,7 +38,7 @@ func Start(in io.Reader, out io.Writer) {
 	// }
 
 	for {
-		fmt.Printf(PROMPT)
+		fmt.Print(PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
@@ -50,8 +54,24 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		// io.WriteString(out, program.String())
+		// io.WriteString(out, "\n")
+
+		evaluated := evaluator.Eval(program, env, "")
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
+
+		// p = parser.New(lexer.New((line)))
+		// program = p.ParseProgram()
+		// fmt.Printf("\nAST: %+v\n", program.String())
+
+		// l = lexer.New(line)
+		// for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
+		// 	fmt.Printf("%+v\n", tok)
+		// }
+
 	}
 }
 
