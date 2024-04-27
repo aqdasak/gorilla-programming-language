@@ -14,25 +14,19 @@ var (
 )
 
 // func Eval(node ast.Node, indent string) object.Object {
-func Eval(args ...interface{}) object.Object {
-	var node ast.Node
-	var indent string
-	if len(args) == 1 {
-		node, _ = args[0].(ast.Node)
-		indent = ""
-	} else {
-		node, _ = args[0].(ast.Node)
-		indent, _ = args[1].(string)
+func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.Object {
+	var indent string = ""
+	if len(opt_indent) == 1 {
+		indent = opt_indent[0]
 	}
-	//defer untrace(trace("Eval"))
+	// defer untrace(trace("Eval"))
 
 	switch node := node.(type) {
-
 	// Statements
 	case *ast.Program:
 		debug.PrintEvaluation(indent, "ast.Program")
 
-		v := evalProgram(node, indent+"    ")
+		v := evalProgram(node, env, indent+"    ")
 
 		if v != nil {
 			debug.PrintEvaluation(indent, "ast.Program(", v.Type(), v.Inspect(), ")")
@@ -41,25 +35,32 @@ func Eval(args ...interface{}) object.Object {
 		return v
 
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression, indent)
+		return Eval(node.Expression, env, indent)
+
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 
 	// Expressions
 	case *ast.IntegerLiteral:
 		v := &object.Integer{Value: node.Value}
 
 		debug.PrintEvaluation(indent, "ast.IntegerLiteral(", v.Type(), v.Inspect(), ")")
+
 		return v
+
 	case *ast.Boolean:
 		debug.PrintEvaluation(indent, "ast.Boolean")
 
 		v := nativeBoolToBooleanObject(node.Value, indent+"    ")
 
 		debug.PrintEvaluation(indent, "ast.Boolean(", v.Type(), v.Inspect(), ")")
+
 		return v
+
 	case *ast.PrefixExpression:
 		debug.PrintEvaluation(indent, "ast.PrefixExpression")
 
-		right := Eval(node.Right, indent+"  ")
+		right := Eval(node.Right, env, indent+"  ")
 		if isError(right) {
 			return right
 		}
@@ -67,16 +68,18 @@ func Eval(args ...interface{}) object.Object {
 		v := evalPrefixExpression(node.Operator, right, indent+"    ")
 
 		debug.PrintEvaluation(indent, "ast.PrefixExpression(", v.Type(), v.Inspect(), ")")
+
 		return v
+
 	case *ast.InfixExpression:
 		debug.PrintEvaluation(indent, "ast.InfixExpression")
 
-		left := Eval(node.Left, indent+"    ")
+		left := Eval(node.Left, env, indent+"    ")
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(node.Right, indent+"    ")
+		right := Eval(node.Right, env, indent+"    ")
 		if isError(right) {
 			return right
 		}
@@ -84,27 +87,36 @@ func Eval(args ...interface{}) object.Object {
 		v := evalInfixExpression(node.Operator, left, right, indent+"    ")
 
 		debug.PrintEvaluation(indent, "ast.InfixExpression(", v.Type(), v.Inspect(), ")")
+
 		return v
 
 	case *ast.BlockStatement:
 		debug.PrintEvaluation(indent, "ast.BlockStatement")
 
-		v := evalBlockStatement(node, indent+"|  ")
+		v := evalBlockStatement(node, env, indent+"|  ")
 
 		debug.PrintEvaluation(indent, "ast.BlockStatement(", v.Type(), v.Inspect(), ")")
 		return v
+
 	case *ast.IfExpression:
 		debug.PrintEvaluation(indent, "ast.IfExpression")
 
-		v := evalIfExpression(node, indent+"│  ")
+		v := evalIfExpression(node, env, indent+"│  ")
 
 		debug.PrintEvaluation(indent, "ast.IfExpression(", v.Type(), v.Inspect(), ")")
 		return v
 
+	case *ast.LetStatement:
+		val := Eval(node.Value, env, indent)
+		if isError(val) {
+			return val
+		}
+		env.Set(node.Name.Value, val)
+
 	case *ast.ReturnStatement:
 		debug.PrintEvaluation(indent, "ast.ReturnStatement")
 
-		val := Eval(node.ReturnValue, indent+"    ")
+		val := Eval(node.ReturnValue, env, indent+"    ")
 		if isError(val) {
 			return val
 		}
@@ -112,6 +124,7 @@ func Eval(args ...interface{}) object.Object {
 		v := &object.ReturnValue{Value: val}
 
 		debug.PrintEvaluation(indent, "ast.ReturnStatement(", v.Type(), v.Inspect(), ")")
+
 		return v
 	}
 
@@ -119,13 +132,13 @@ func Eval(args ...interface{}) object.Object {
 	return nil
 }
 
-func evalProgram(program *ast.Program, indent string) object.Object {
+func evalProgram(program *ast.Program, env *object.Environment, indent string) object.Object {
 	//defer untrace(trace("evalProgram"))
 
 	var result object.Object
 
 	for _, statement := range program.Statements {
-		result = Eval(statement, indent)
+		result = Eval(statement, env, indent)
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
@@ -142,12 +155,12 @@ func evalProgram(program *ast.Program, indent string) object.Object {
 	return result
 }
 
-func evalBlockStatement(block *ast.BlockStatement, indent string) object.Object {
+func evalBlockStatement(block *ast.BlockStatement, env *object.Environment, indent string) object.Object {
 	//defer untrace(trace("evalBlockStatement"))
 	var result object.Object
 
 	for _, statement := range block.Statements {
-		result = Eval(statement, indent)
+		result = Eval(statement, env, indent)
 
 		// Here we explicitly don’t unwrap the return value and only check the Type() of each evaluation result. If it’s object.RETURN_VALUE_OBJ we simply return the *object.ReturnValue, without unwrapping its .Value, so it stops execution in a possible outer block statement and bubbles up to evalProgram, where it finally get’s unwrapped.
 		if result != nil {
@@ -268,18 +281,18 @@ func evalIntegerInfixExpression(
 	}
 }
 
-func evalIfExpression(ie *ast.IfExpression, indent string) object.Object {
+func evalIfExpression(ie *ast.IfExpression, env *object.Environment, indent string) object.Object {
 	//defer untrace(trace("evalIfExpression"))
 
-	condition := Eval(ie.Condition, indent)
+	condition := Eval(ie.Condition, env, indent)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(ie.Consequence, indent)
+		return Eval(ie.Consequence, env, indent)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative, indent)
+		return Eval(ie.Alternative, env, indent)
 	} else {
 		return NULL
 	}
@@ -309,4 +322,15 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR_OBJ
 	}
 	return false
+}
+
+func evalIdentifier(
+	node *ast.Identifier,
+	env *object.Environment,
+) object.Object {
+	val, ok := env.Get(node.Value)
+	if !ok {
+		return newError("identifier not found: " + node.Value)
+	}
+	return val
 }
