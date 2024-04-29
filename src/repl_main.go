@@ -7,7 +7,7 @@ import (
 	"os/user"
 )
 
-func main() {
+func runrepl() {
 	user, err := user.Current()
 	if err != nil {
 		panic(err)
