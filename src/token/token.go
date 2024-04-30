@@ -27,6 +27,7 @@ const (
 	GT       = ">"
 	EQ       = "=="
 	NOT_EQ   = "!="
+	MODULO   = "%"
 
 	// Delimiters
 	COMMA     = ","

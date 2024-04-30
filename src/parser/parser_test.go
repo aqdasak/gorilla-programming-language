@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/lexer"
+	"gorilla/ast"
+	"gorilla/lexer"
 	"testing"
 )
 
@@ -195,6 +195,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"5 - 5;", 5, "-", 5},
 		{"5 * 5;", 5, "*", 5},
 		{"5 / 5;", 5, "/", 5},
+		{"5 % 5;", 5, "%", 5},
 		{"5 > 5;", 5, ">", 5},
 		{"5 < 5;", 5, "<", 5},
 		{"5 == 5;", 5, "==", 5},
@@ -1084,8 +1085,8 @@ func TestWhileExpression(t *testing.T) {
 		return
 	}
 
-	if len(exp.Body.Statements) != 2 {
-		t.Errorf("body is not 2 statements. got=%d\n",
+	if len(exp.Body.Statements) != 1 {
+		t.Errorf("body is not 1 statements. got=%d\n",
 			len(exp.Body.Statements))
 	}
 

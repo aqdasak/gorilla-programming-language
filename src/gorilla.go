@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"gorilla/evaluator"
+	"gorilla/lexer"
+	"gorilla/object"
+	"gorilla/parser"
+	"gorilla/repl"
 	"io"
-	"monkey/evaluator"
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
-	"monkey/repl"
 	"os"
 	"os/user"
 )
@@ -19,11 +19,11 @@ func check(e error) {
 	}
 }
 
-const MONKEY_FACE = "🐒"
+const GORILLA_FACE = "🦍"
 
 func printParserErrors(out io.Writer, errors []string) {
-	io.WriteString(out, MONKEY_FACE)
-	io.WriteString(out, "\nWoops! We ran into some monkey business here!\n")
+	io.WriteString(out, GORILLA_FACE)
+	io.WriteString(out, "\nWoops! We ran into some gorilla business here!\n")
 	io.WriteString(out, " parser errors:\n")
 	for _, msg := range errors {
 		io.WriteString(out, "\t"+msg+"\n")
@@ -59,7 +59,7 @@ func runRepl() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Hello %s! This is the Monkey programming language!\n",
+	fmt.Printf("Hello %s! This is the Gorilla programming language!\n",
 		user.Username)
 	fmt.Printf("Feel free to type in commands\n")
 	repl.Start(os.Stdin, os.Stdout)

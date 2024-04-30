@@ -3,8 +3,8 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"gorilla/ast"
 	"hash/fnv"
-	"monkey/ast"
 	"strings"
 )
 

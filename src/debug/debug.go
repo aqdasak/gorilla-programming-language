@@ -2,10 +2,10 @@ package debug
 
 import (
 	"fmt"
-	"monkey/object"
+	"gorilla/object"
 )
 
-var PRINTEVALUATION = true
+var PRINTEVALUATION = false
 
 func PrintEvaluationStart(indent, blockName string) {
 	if !PRINTEVALUATION {

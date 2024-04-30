@@ -3,7 +3,7 @@ package lexer
 import (
 	"testing"
 
-	"monkey/token"
+	"gorilla/token"
 )
 
 func TestNextToken(t *testing.T) {
@@ -32,6 +32,7 @@ if ( 5 < 10 ) {
 {"foo": "bar"}
 while(i<10){let i=i+1;};
 while(true){print(i);};
+6 % 2;
 `
 
 	tests := []struct {
@@ -167,6 +168,11 @@ while(true){print(i);};
 		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+
+		{token.INT, "6"},
+		{token.MODULO, "%"},
+		{token.INT, "2"},
 		{token.SEMICOLON, ";"},
 
 		{token.EOF, ""},

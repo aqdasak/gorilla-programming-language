@@ -3,11 +3,11 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"gorilla/evaluator"
+	"gorilla/lexer"
+	"gorilla/object"
+	"gorilla/parser"
 	"io"
-	"monkey/evaluator"
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
 )
 
 const PROMPT = ">> "
@@ -59,7 +59,9 @@ func Start(in io.Reader, out io.Writer) {
 
 		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
+			if evaluated != evaluator.NULL {
+				io.WriteString(out, evaluated.Inspect())
+			}
 			io.WriteString(out, "\n")
 		}
 
@@ -75,11 +77,11 @@ func Start(in io.Reader, out io.Writer) {
 	}
 }
 
-const MONKEY_FACE = "🐒"
+const GORILLA_FACE = "🦍"
 
 func printParserErrors(out io.Writer, errors []string) {
-	io.WriteString(out, MONKEY_FACE)
-	io.WriteString(out, "\nWoops! We ran into some monkey business here!\n")
+	io.WriteString(out, GORILLA_FACE)
+	io.WriteString(out, "\nWoops! We ran into some gorilla business here!\n")
 	io.WriteString(out, " parser errors:\n")
 	for _, msg := range errors {
 		io.WriteString(out, "\t"+msg+"\n")

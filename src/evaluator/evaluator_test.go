@@ -1,9 +1,9 @@
 package evaluator
 
 import (
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
+	"gorilla/lexer"
+	"gorilla/object"
+	"gorilla/parser"
 	"testing"
 )
 
@@ -27,6 +27,11 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"3 * 3 * 3 + 10", 37},
 		{"3 * (3 * 3) + 10", 37},
 		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+		{"5 % 5 + 5 % 5 - 10", -10},
+		{"6 % 5 + 11 % 5 - 10", -8},
+		{"2 % 2 * 2 % 2 * 2", 0},
+		{"5 % 2 * 3 % 2 * 2", 2},
+		{"2 * 2 % 2 % 2 + 2", 2},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -230,7 +235,7 @@ func TestErrorHandling(t *testing.T) {
 			"unknown operator: STRING - STRING",
 		},
 		{
-			`{"name": "Monkey"}[fn(x) { x }];`,
+			`{"name": "Gorilla"}[fn(x) { x }];`,
 			"unusable as hash key: FUNCTION",
 		},
 	}

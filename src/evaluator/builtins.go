@@ -2,7 +2,7 @@ package evaluator
 
 import (
 	"fmt"
-	"monkey/object"
+	"gorilla/object"
 )
 
 var builtins = map[string]*object.Builtin{
@@ -111,18 +111,63 @@ var builtins = map[string]*object.Builtin{
 	"println": {
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
-				fmt.Print(arg.Inspect(), " ")
+				fmt.Print(arg.Inspect())
 			}
 			fmt.Println()
+			// bufio.NewWriter(os.Stdout).Flush()
 			return NULL
 		},
 	},
 	"print": {
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
-				fmt.Print(arg.Inspect(), " ")
+				fmt.Print(arg.Inspect())
 			}
 			return NULL
+		},
+	},
+	"readint": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 0 {
+				for _, arg := range args {
+					fmt.Print(arg.Inspect())
+				}
+			}
+
+			var i int
+			fmt.Scan(&i)
+			return &object.Integer{Value: int64(i)}
+		},
+	},
+	"readline": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 0 {
+				for _, arg := range args {
+					fmt.Print(arg.Inspect())
+				}
+			}
+
+			var i string
+			fmt.Scanln(&i)
+			return &object.String{Value: i}
+		},
+	},
+	"string": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1",
+					len(args))
+			}
+
+			// val:=&object.String{}
+			// switch args[0].(type){
+			// case *object.Integer:val.Value=string(args[0].Valuex)
+			// case *object.Boolean:
+			// case *object.String:
+			// case *object.Array:
+			// default:
+			// }
+			return &object.String{Value: args[0].Inspect()}
 		},
 	},
 }
