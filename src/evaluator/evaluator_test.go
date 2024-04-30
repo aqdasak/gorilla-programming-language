@@ -522,3 +522,28 @@ func TestHashIndexExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestWhileExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"let i=0; while (i<10) { let i=i+1 }; i", 10},
+		{"while (false) { 10 }", nil},
+		{"let i=0; while (false) { 10 }; i", 0},
+		{"while (1 > 2) { 10 }", nil},
+		{`let i=0;
+		while (i < 10) {
+			let i=i+1;
+		}`, nil},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}

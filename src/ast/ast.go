@@ -306,3 +306,21 @@ func (hl *HashLiteral) String() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type WhileExpression struct {
+	Token     token.Token // The 'if' token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (we *WhileExpression) expressionNode()      {}
+func (we *WhileExpression) TokenLiteral() string { return we.Token.Literal }
+func (we *WhileExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("while(")
+	out.WriteString(we.Condition.String())
+	out.WriteString("){ ")
+	out.WriteString(we.Body.String())
+	out.WriteString(" }")
+	return out.String()
+}

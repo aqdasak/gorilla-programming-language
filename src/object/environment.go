@@ -19,7 +19,10 @@ func (e *Environment) Get(name string) (Object, bool) {
 }
 
 func (e *Environment) Set(name string, val Object) Object {
+	// fmt.Println("Before Set:", e)
 	e.store[name] = val
+	// fmt.Println("After Set:", e)
+	// fmt.Println()
 	return val
 }
 

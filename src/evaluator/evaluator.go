@@ -24,12 +24,12 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
-		debug.PrintEvaluation(indent, "ast.Program")
+		debug.PrintEvaluationStart(indent, "ast.Program")
 
 		v := evalProgram(node, env, indent+"    ")
 
 		if v != nil {
-			debug.PrintEvaluation(indent, "ast.Program(", v.Type(), v.Inspect(), ")")
+			debug.PrintEvaluationEnd(indent, "ast.Program", v)
 		}
 
 		return v
@@ -41,16 +41,16 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 	case *ast.IntegerLiteral:
 		v := &object.Integer{Value: node.Value}
 
-		debug.PrintEvaluation(indent, "ast.IntegerLiteral(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.IntegerLiteral", v)
 
 		return v
 
 	case *ast.Boolean:
-		debug.PrintEvaluation(indent, "ast.Boolean")
+		debug.PrintEvaluationStart(indent, "ast.Boolean")
 
 		v := nativeBoolToBooleanObject(node.Value)
 
-		debug.PrintEvaluation(indent, "ast.Boolean(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.Boolean", v)
 
 		return v
 
@@ -81,7 +81,7 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 		return evalHashLiteral(node, env)
 
 	case *ast.PrefixExpression:
-		debug.PrintEvaluation(indent, "ast.PrefixExpression")
+		debug.PrintEvaluationStart(indent, "ast.PrefixExpression")
 
 		right := Eval(node.Right, env, indent+"  ")
 		if isError(right) {
@@ -90,12 +90,12 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 
 		v := evalPrefixExpression(node.Operator, right, indent+"    ")
 
-		debug.PrintEvaluation(indent, "ast.PrefixExpression(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.PrefixExpression", v)
 
 		return v
 
 	case *ast.InfixExpression:
-		debug.PrintEvaluation(indent, "ast.InfixExpression")
+		debug.PrintEvaluationStart(indent, "ast.InfixExpression")
 
 		left := Eval(node.Left, env, indent+"    ")
 		if isError(left) {
@@ -109,25 +109,28 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 
 		v := evalInfixExpression(node.Operator, left, right, indent+"    ")
 
-		debug.PrintEvaluation(indent, "ast.InfixExpression(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.InfixExpression", v)
 
 		return v
 
 	case *ast.BlockStatement:
-		debug.PrintEvaluation(indent, "ast.BlockStatement")
+		debug.PrintEvaluationStart(indent, "ast.BlockStatement")
 
 		v := evalBlockStatement(node, env, indent+"|  ")
 
-		debug.PrintEvaluation(indent, "ast.BlockStatement(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.BlockStatement", v)
 		return v
 
 	case *ast.IfExpression:
-		debug.PrintEvaluation(indent, "ast.IfExpression")
+		debug.PrintEvaluationStart(indent, "ast.IfExpression")
 
 		v := evalIfExpression(node, env, indent+"│  ")
 
-		debug.PrintEvaluation(indent, "ast.IfExpression(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.IfExpression", v)
 		return v
+
+	case *ast.WhileExpression:
+		return evalWhileExpression(node, env)
 
 	case *ast.LetStatement:
 		val := Eval(node.Value, env, indent)
@@ -158,7 +161,7 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 		return applyFunction(function, args)
 
 	case *ast.ReturnStatement:
-		debug.PrintEvaluation(indent, "ast.ReturnStatement")
+		debug.PrintEvaluationStart(indent, "ast.ReturnStatement")
 
 		val := Eval(node.ReturnValue, env, indent+"    ")
 		if isError(val) {
@@ -167,12 +170,12 @@ func Eval(node ast.Node, env *object.Environment, opt_indent ...string) object.O
 
 		v := &object.ReturnValue{Value: val}
 
-		debug.PrintEvaluation(indent, "ast.ReturnStatement(", v.Type(), v.Inspect(), ")")
+		debug.PrintEvaluationEnd(indent, "ast.ReturnStatement", v)
 
 		return v
 	}
 
-	debug.PrintEvaluation(indent, "nil")
+	debug.PrintEvaluationStart(indent, "nil")
 	return nil
 }
 
@@ -186,11 +189,11 @@ func evalProgram(program *ast.Program, env *object.Environment, indent string) o
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
-			debug.PrintEvaluation("\n Returning out of program", result.Value.Type(), result.Value.Inspect())
+			debug.PrintEvaluationEnd("", "\n Returning out of program", result.Value)
 
 			return result.Value
 		case *object.Error:
-			debug.PrintEvaluation("\n Returning out of program", result.Type(), result.Inspect())
+			debug.PrintEvaluationEnd("", "\n Returning out of program", result)
 
 			return result
 		}
@@ -211,7 +214,7 @@ func evalBlockStatement(block *ast.BlockStatement, env *object.Environment, inde
 			rt := result.Type()
 			if rt == object.RETURN_VALUE_OBJ || rt == object.ERROR_OBJ {
 
-				debug.PrintEvaluation(indent+"\n"+indent+"Returning out of block", result.Type(), result.Inspect())
+				debug.PrintEvaluationEnd(indent, "\n"+indent+"Returning out of block", result)
 
 				return result
 			}
@@ -518,4 +521,39 @@ func evalHashIndexExpression(hash, index object.Object) object.Object {
 	}
 
 	return pair.Value
+}
+
+func evalWhileExpression(we *ast.WhileExpression, env *object.Environment) object.Object {
+	condition := Eval(we.Condition, env)
+	if isError(condition) {
+		return condition
+	}
+
+	// if isTruthy(condition) {
+	// 	return Eval(we.Body, env)
+	// } else {
+	// 	return NULL
+	// }
+
+	var result object.Object = NULL
+
+	for {
+		// fmt.Println("C:", condition)
+		condition := Eval(we.Condition, env)
+		// fmt.Println("C:", condition)
+
+		if !isTruthy(condition) {
+			// fmt.Println("==STOP==")
+			if result == nil {
+				return NULL
+			}
+			return result
+		}
+
+		// fmt.Println("==RUN AGAIN==")
+		// fmt.Println("# env:", env)
+		result = Eval(we.Body, env)
+		// fmt.Println("# env:", env)
+	}
+	return result
 }

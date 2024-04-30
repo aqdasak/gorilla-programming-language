@@ -1,16 +1,36 @@
 package debug
 
-import "fmt"
+import (
+	"fmt"
+	"monkey/object"
+)
 
-var PRINTEVALUATION = false
+var PRINTEVALUATION = true
 
-func PrintEvaluation(a ...interface{}) {
+func PrintEvaluationStart(indent, blockName string) {
 	if !PRINTEVALUATION {
 		return
 	}
 
-	for _, i := range a {
-		fmt.Print(i)
+	fmt.Print(indent)
+	// for _, i := range a {
+	// 	fmt.Print(i)
+	// }
+	fmt.Println(blockName)
+}
+
+func PrintEvaluationEnd(indent, blockName string, obj object.Object) {
+	if !PRINTEVALUATION {
+		return
 	}
-	fmt.Println()
+
+	fmt.Print(indent)
+	fmt.Print(blockName, "(")
+
+	if obj != nil {
+		fmt.Print(obj.Type(), obj.Inspect())
+	} else {
+		fmt.Print("null")
+	}
+	fmt.Println(")")
 }
