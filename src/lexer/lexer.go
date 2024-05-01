@@ -1,6 +1,8 @@
 package lexer
 
-import "gorilla/token"
+import (
+	"gorilla/token"
+)
 
 type Lexer struct {
 	input        string
@@ -31,9 +33,19 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
+	case '#':
+		// Comment
+		for !(l.ch == '\n' || l.ch == 0) {
+			l.readChar()
+		}
+		tok.Type = token.STRING
+		tok.Literal = ""
 	case '"':
 		tok.Type = token.STRING
-		tok.Literal = l.readString()
+		tok.Literal = l.readString('"')
+	case '\'':
+		tok.Type = token.STRING
+		tok.Literal = l.readString('\'')
 	case '=':
 		if l.peekChar() == '=' {
 			ch := l.ch
@@ -144,15 +156,43 @@ func (l *Lexer) peekChar() byte {
 	}
 }
 
-func (l *Lexer) readString() string {
+func (l *Lexer) readString(endLiteral byte) string {
 	position := l.position + 1
 
 	for {
 		l.readChar()
-		if l.ch == '"' || l.ch == 0 {
+		if l.ch == endLiteral || l.ch == 0 {
 			break
 		}
 	}
 
-	return l.input[position:l.position]
+	st := l.input[position:l.position]
+
+	// Escape sequence support: '\\', '\t', \n
+	length := len(st)
+	if length <= 1 {
+		return st
+	}
+	var s string
+	i := 0
+	for i < length-1 {
+		if st[i] == '\\' && st[i+1] == '\\' {
+			s += `\`
+			i += 1
+		} else if st[i] == '\\' && st[i+1] == 'n' {
+			s += "\n"
+			i += 1
+		} else if st[i] == '\\' && st[i+1] == 't' {
+			s += "\t"
+			i += 1
+		} else {
+			s += string(st[i])
+		}
+		i += 1
+	}
+	if i < length {
+		s += string(st[length-1])
+	}
+
+	return s
 }

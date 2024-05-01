@@ -3,6 +3,7 @@ package evaluator
 import (
 	"fmt"
 	"gorilla/object"
+	"os"
 )
 
 var builtins = map[string]*object.Builtin{
@@ -114,7 +115,6 @@ var builtins = map[string]*object.Builtin{
 				fmt.Print(arg.Inspect())
 			}
 			fmt.Println()
-			// bufio.NewWriter(os.Stdout).Flush()
 			return NULL
 		},
 	},
@@ -159,15 +159,13 @@ var builtins = map[string]*object.Builtin{
 					len(args))
 			}
 
-			// val:=&object.String{}
-			// switch args[0].(type){
-			// case *object.Integer:val.Value=string(args[0].Valuex)
-			// case *object.Boolean:
-			// case *object.String:
-			// case *object.Array:
-			// default:
-			// }
 			return &object.String{Value: args[0].Inspect()}
+		},
+	},
+	"exit": {
+		Fn: func(args ...object.Object) object.Object {
+			os.Exit(0)
+			return &object.String{}
 		},
 	},
 }

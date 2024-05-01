@@ -531,31 +531,22 @@ func evalWhileExpression(we *ast.WhileExpression, env *object.Environment) objec
 		return condition
 	}
 
-	// if isTruthy(condition) {
-	// 	return Eval(we.Body, env)
-	// } else {
-	// 	return NULL
-	// }
-
 	var result object.Object = NULL
-
 	for {
-		// fmt.Println("C:", condition)
 		condition := Eval(we.Condition, env)
-		// fmt.Println("C:", condition)
 
 		if !isTruthy(condition) {
-			// fmt.Println("==STOP==")
 			if result == nil {
 				return NULL
 			}
 			return result
 		}
 
-		// fmt.Println("==RUN AGAIN==")
-		// fmt.Println("# env:", env)
 		result = Eval(we.Body, env)
-		// fmt.Println("# env:", env)
+		switch result := result.(type) {
+		case *object.ReturnValue:
+			return result
+		}
+
 	}
-	return result
 }

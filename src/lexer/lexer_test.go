@@ -28,11 +28,19 @@ if ( 5 < 10 ) {
 10 != 9;
 "foobar"
 "foo bar"
+'foobar'
+'foo bar'
 [1, 2];
 {"foo": "bar"}
 while(i<10){let i=i+1;};
 while(true){print(i);};
 6 % 2;
+"\n\t\\"
+"\n"
+"\t"
+"\\"
+'"'
+"'"
 `
 
 	tests := []struct {
@@ -125,6 +133,10 @@ while(true){print(i);};
 
 		{token.STRING, "foo bar"},
 
+		{token.STRING, "foobar"},
+
+		{token.STRING, "foo bar"},
+
 		{token.LBRACKET, "["},
 		{token.INT, "1"},
 		{token.COMMA, ","},
@@ -154,8 +166,6 @@ while(true){print(i);};
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 		{token.SEMICOLON, ";"},
-		// 	while(i<10){let i=i+1;};
-		//  while(true){print(i);};
 
 		{token.WHILE, "while"},
 		{token.LPAREN, "("},
@@ -174,6 +184,18 @@ while(true){print(i);};
 		{token.MODULO, "%"},
 		{token.INT, "2"},
 		{token.SEMICOLON, ";"},
+
+		{token.STRING, "\n\t\\"},
+
+		{token.STRING, "\n"},
+
+		{token.STRING, "\t"},
+
+		{token.STRING, "\\"},
+
+		{token.STRING, `"`},
+
+		{token.STRING, "'"},
 
 		{token.EOF, ""},
 	}
