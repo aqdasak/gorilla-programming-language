@@ -136,30 +136,42 @@ func runFromFile(file string) {
 
 }
 
+// func main() {
+// 	debug.PRINTEVALUATION = false
+// 	atleast_args := 1
+
+// 	idx := 0
+// 	for i, arg := range os.Args[1:] {
+// 		if arg == "--debug" {
+// 			debug.PRINTEVALUATION = true
+// 			idx = i + 1
+// 			atleast_args = 2
+// 		}
+// 	}
+
+// 	// 			len	idx atleast
+// 	// g		1	0	1
+// 	// g -d		2	1	2
+// 	// g f		2	0	1
+// 	// g -d f	3	1	2
+// 	// g f -d	3	2	2
+
+// 	if len(os.Args) == atleast_args {
+// 		runRepl(os.Stdin, os.Stdout)
+// 	} else if len(os.Args) == atleast_args+1 {
+// 		runFromFile(os.Args[idx%2+1])
+// 	} else {
+// 		fmt.Println("Wrong arguments")
+// 	}
+// }
+
 func main() {
 	debug.PRINTEVALUATION = false
-	atleast_args := 1
 
-	idx := 0
-	for i, arg := range os.Args[1:] {
-		if arg == "--debug" {
-			debug.PRINTEVALUATION = true
-			idx = i + 1
-			atleast_args = 2
-		}
-	}
-
-	// 			len	idx atleast
-	// g		1	0	1
-	// g -d		2	1	2
-	// g f		2	0	1
-	// g -d f	3	1	2
-	// g f -d	3	2	2
-
-	if len(os.Args) == atleast_args {
+	if len(os.Args) == 1 {
 		runRepl(os.Stdin, os.Stdout)
-	} else if len(os.Args) == atleast_args+1 {
-		runFromFile(os.Args[idx%2+1])
+	} else if len(os.Args) == 2 {
+		runFromFile(os.Args[1])
 	} else {
 		fmt.Println("Wrong arguments")
 	}
