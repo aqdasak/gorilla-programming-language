@@ -3,6 +3,7 @@ package evaluator
 import (
 	"fmt"
 	"gorilla/object"
+	"math"
 	"os"
 )
 
@@ -166,6 +167,44 @@ var builtins = map[string]*object.Builtin{
 		Fn: func(args ...object.Object) object.Object {
 			os.Exit(0)
 			return &object.String{}
+		},
+	},
+	"pow": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=1",
+					len(args))
+			}
+
+			if args[0].Type() != object.INTEGER_OBJ {
+				return newError("argument to must be INTEGER, got %s",
+					args[0].Type())
+			} else if args[1].Type() != object.INTEGER_OBJ {
+				return newError("argument to must be INTEGER, got %s",
+					args[1].Type())
+			}
+
+			x := float64(args[0].(*object.Integer).Value)
+			y := float64(args[1].(*object.Integer).Value)
+
+			return &object.Integer{Value: int64(math.Pow(x, y))}
+		},
+	},
+	"sqrt": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1",
+					len(args))
+			}
+
+			if args[0].Type() != object.INTEGER_OBJ {
+				return newError("argument to must be INTEGER, got %s",
+					args[0].Type())
+			}
+
+			x := float64(args[0].(*object.Integer).Value)
+
+			return &object.Integer{Value: int64(math.Sqrt(x))}
 		},
 	},
 }
