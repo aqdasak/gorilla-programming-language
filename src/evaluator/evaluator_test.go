@@ -32,6 +32,10 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"2 % 2 * 2 % 2 * 2", 0},
 		{"5 % 2 * 3 % 2 * 2", 2},
 		{"2 * 2 % 2 % 2 + 2", 2},
+		{"pow(2, 3)", 8},
+		{"pow(3, 2)", 9},
+		{"sqrt(4)", 2},
+		{"sqrt(16)", 4},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -238,6 +242,26 @@ func TestErrorHandling(t *testing.T) {
 			`{"name": "Gorilla"}[fn(x) { x }];`,
 			"unusable as hash key: FUNCTION",
 		},
+		{
+			"1 / 0",
+			"division by zero",
+		},
+		{
+			"3 / 0",
+			"division by zero",
+		},
+		{
+			"1 % 0",
+			"modulo by zero",
+		},
+		{
+			"3 % 0",
+			"modulo by zero",
+		},
+		{
+			"'abcd'['a']",
+			"index operator not supported: STRING",
+		},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -332,6 +356,72 @@ func TestStringConcatenation(t *testing.T) {
 	}
 	if str.Value != "Hello World!" {
 		t.Errorf("String has wrong value. got=%q", str.Value)
+	}
+}
+
+func TestStringIndexExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			"'abcd'[0]",
+			"a",
+		},
+		{
+			"\"abcd\"[0]",
+			"a",
+		},
+		{
+			"'abcd'[1]",
+			"b",
+		},
+		{
+			"'abcd'[2]",
+			"c",
+		},
+		{
+			"let i = 0; 'abcd'[i];",
+			"a",
+		},
+		{
+			"'abcd'[1 + 1];",
+			"c",
+		},
+		{
+			"let myStr = 'abcd'; myStr[2];",
+			"c",
+		},
+		{
+			"let myStr = 'abcd'; myStr[0] + myStr[1] + myStr[2];",
+			"abc",
+		},
+		{
+			"'abcd'[4]",
+			nil,
+		},
+		{
+			"'abcd'[-1]",
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		expectedStr, ok := tt.expected.(string)
+		if ok {
+			str, ok := evaluated.(*object.String)
+			if !ok {
+				t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+			}
+
+			if str.Value != expectedStr {
+				t.Errorf("String has wrong value. got=%q", str.Value)
+			}
+		} else {
+			testNullObject(t, evaluated)
+		}
+
 	}
 }
 

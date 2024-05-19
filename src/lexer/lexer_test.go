@@ -41,6 +41,8 @@ while(true){print(i);};
 "\\"
 '"'
 "'"
+foo # comment
+# comment
 `
 
 	tests := []struct {
@@ -196,6 +198,11 @@ while(true){print(i);};
 		{token.STRING, `"`},
 
 		{token.STRING, "'"},
+
+		{token.IDENT, "foo"},
+		{token.STRING, ""},
+
+		{token.STRING, ""},
 
 		{token.EOF, ""},
 	}

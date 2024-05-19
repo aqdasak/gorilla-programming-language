@@ -279,7 +279,7 @@ func evalInfixExpression(
 
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
-		return evalIntegerInfixExpression(operator, left, right, indent+"  ")
+		return evalIntegerInfixExpression(operator, left, right)
 
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
@@ -302,7 +302,6 @@ func evalInfixExpression(
 func evalIntegerInfixExpression(
 	operator string,
 	left, right object.Object,
-	indent string,
 ) object.Object {
 	//defer untrace(trace("evalIntegerInfixExpression"))
 
@@ -461,7 +460,13 @@ func evalStringInfixExpression(
 		leftVal := left.(*object.String).Value
 		rightVal := right.(*object.String).Value
 
-		return &object.Boolean{Value: leftVal == rightVal}
+		return nativeBoolToBooleanObject(leftVal == rightVal)
+
+	} else if operator == "!=" {
+		leftVal := left.(*object.String).Value
+		rightVal := right.(*object.String).Value
+
+		return nativeBoolToBooleanObject(leftVal != rightVal)
 
 	} else {
 		return newError("unknown operator: %s %s %s",
@@ -475,7 +480,7 @@ func evalIndexExpression(left, index object.Object) object.Object {
 		return evalArrayIndexExpression(left, index)
 	case left.Type() == object.HASH_OBJ:
 		return evalHashIndexExpression(left, index)
-	case left.Type() == object.STRING_OBJ:
+	case left.Type() == object.STRING_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalStringIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
